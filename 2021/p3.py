@@ -6,10 +6,9 @@ import functools
 
 
 def parse(lines: List[str]) -> List[List[int]]:
-    matrix: List[List[int]] = []
-    for line in lines:
-        matrix.append([int(char) for char in line])
-    return matrix
+    return [
+        [int(char) for char in line]
+        for line in lines]
 
 
 def bitlist_to_int(binary: List[int]) -> int:
@@ -17,15 +16,11 @@ def bitlist_to_int(binary: List[int]) -> int:
     return functools.reduce(constructor, binary, 0)
 
 
-def column_sum(matrix: List[List[int]], column: int) -> int:
-    def summator(accumulator, row): return row[column] + accumulator
-    return functools.reduce(summator, matrix, 0)
-
-
 def majority_bit(matrix: List[List[int]], column: int) -> int:
-    sum = column_sum(matrix, column)
+    def summator(accumulator, row): return row[column] + accumulator
+    column_sum = functools.reduce(summator, matrix, 0)
     # calculate if sum is at last half of total count
-    return sum >= (len(matrix) + 1) // 2
+    return column_sum >= (len(matrix) + 1) // 2
 
 
 def part1(matrix: List[List[int]]) -> int:
