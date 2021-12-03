@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List, Tuple
+from typing import List
 from aocd import lines
 from aocd import submit
 import functools
@@ -17,74 +17,40 @@ def bitlist_to_int(binary: List[int]) -> int:
     return functools.reduce(constructor, binary, 0)
 
 
-def calculate_histogramm(matrix: List[List[int]]) -> List[int]:
-    def summator(row, accumulator): return [
-        sum(list(pair)) for pair in zip(row, accumulator)]
-    # https: // stackoverflow.com/a/8528626q
-    histogramm = functools.reduce(summator, matrix, [0] * len(matrix[0]))
-    # print(f"{histogramm}")
-    return histogramm
+def column_sum(matrix: List[List[int]], column: int) -> int:
+    def summator(accumulator, row): return row[column] + accumulator
+    return functools.reduce(summator, matrix, 0)
 
 
-def ones_complement(val: int, digits: int) -> int:
-    return val ^ ((1 << digits) - 1)
-
-
-def calculate_gamma(histogramm: List[int], num_entries: int) -> List[int]:
-    gamma = [(count >= (num_entries + 1) // 2) for count in histogramm]
-    # print(
-    #     f"gamma of {histogramm} with {num_entries} entries is {bin(gamma)}")
-    return gamma
+def majority_bit(matrix: List[List[int]], column: int) -> int:
+    sum = column_sum(matrix, column)
+    # calculate if sum is at last half of total count
+    return sum >= (len(matrix) + 1) // 2
 
 
 def part1(matrix: List[List[int]]) -> int:
-    digits: int = len(matrix[0])
-
-    histogramm = calculate_histogramm(matrix)
-    gamma = bitlist_to_int(calculate_gamma(histogramm, len(matrix)))
-    return gamma * ones_complement(gamma, digits)
-
-
-def calculate_oxygen(matrix: List[List[int]]) -> int:
-    digits: int = len(matrix[0])
-    matches = matrix
-    for i in range(digits):
-        histogramm = calculate_histogramm(matches)
-        digit = (calculate_gamma(histogramm, len(matches)))[i]
-        matches = [number for number in matches if
-                   (number[i]) % 2 == digit]
-        # print(f"for {digit} got {len(matches)}: ", end="")
-        # [print(bin(bitlist_to_int(match)), end=", ") for match in matches]
-        # print("")
-        if len(matches) == 1:
-            return bitlist_to_int(matches[0])
-    return None
+    gamma = bitlist_to_int(
+        [majority_bit(matrix, i) for i in range(len(matrix[0]))]
+    )
+    # calculate one's complement
+    epsilon = gamma ^ ((1 << len(matrix[0])) - 1)
+    return gamma * epsilon
 
 
-def calculate_co2(matrix: List[List[int]]) -> int:
-    digits: int = len(matrix[0])
-    matches = matrix
-    for i in range(digits):
-        histogramm = calculate_histogramm(matches)
-        digit = 1 - calculate_gamma(histogramm, len(matches))[i]
-        matches = [number for number in matches if
-                   (number[i]) % 2 == digit]
-        # print(f"for {digit} got {len(matches)}: ", end="")
-        # [print(bin(bitlist_to_int(match)), end=", ") for match in matches]
-        # print("")
-        if len(matches) == 1:
-            return bitlist_to_int(matches[0])
-    return None
+def majority_matcher(matrix: List[List[int]], column: int, invert: bool) -> int:
+    if len(matrix) == 1:
+        return bitlist_to_int(matrix[0])
+    else:
+        bit = majority_bit(matrix, column)
+        matches = [number for number in matrix if
+                   number[column] == (1 - bit if invert else bit)]
+        return majority_matcher(matches, column + 1, invert)
 
 
 def part2(matrix: List[List[int]]) -> int:
-    oxygen = calculate_oxygen(matrix)
-    # print("oxygen: " + bin(oxygen))
-    co2 = calculate_co2(matrix)
-    # print("co2: " + bin(co2))
+    oxygen = majority_matcher(matrix, 0, invert=False)
+    co2 = majority_matcher(matrix, 0, invert=True)
     return oxygen * co2
-
-# functional solution
 
 
 def main():
@@ -114,8 +80,6 @@ def main():
     # submit(answer_a, part="a")
 
     assert(part2(example_numbers) == 230)
-    assert(calculate_oxygen(example_numbers) == 23)
-    assert(calculate_co2(example_numbers) == 10)
     answer_b = part2(numbers)
 
     print(f"b {answer_b}")
