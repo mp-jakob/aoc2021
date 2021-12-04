@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, no_type_check
 from aocd import lines
 from aocd import submit
 import functools
 import re
+from itertools import chain
 
 Board = List[List[int]]
-Occurences = Dict[int, List[Tuple[int, int, int]]]
 
 
-def parse(lines: List[str]) -> Tuple[List[int], List[Board], Occurences]:
+def parse(lines: List[str]) -> Tuple[List[int], List[Board]]:
     drawn: List[int] = [int(number) for number in lines[0].split(",")]
     boards: List[Board] = []
-    occurences: Occurences = dict()
     for line in lines[1:]:
         if not line:
             boards.append([])
@@ -21,18 +20,17 @@ def parse(lines: List[str]) -> Tuple[List[int], List[Board], Occurences]:
             row_numbers: List[int] = [int(x)
                                       for x in re.split('\s+', line.strip())]
             boards[-1].append(row_numbers)
-            for i, number in enumerate(row_numbers):
-                if number not in occurences:
-                    occurences[number] = []
-                occurences[number].append(
-                    (len(boards) - 1, len(boards[-1]) - 1, i))
-    return (drawn, boards, occurences)
+    return (drawn, boards)
 
 
 def empty_boards(boards: int, rows: int, columns: int) -> List[Board]:
     # prevent shallow copy of rows
     # https://stackoverflow.com/a/13347704
-    return [[[0 for i in range(columns)] for i in range(rows)]for i in range(boards)]
+    return [
+        [
+            [0 for i in range(columns)]
+            for i in range(rows)]
+        for i in range(boards)]
 
 
 def column_full(board: Board, column: int) -> int:
@@ -52,24 +50,34 @@ def unmarked_board_sum(board: Board, marks: Board) -> int:
     return sum([unmarked_row_sum(row, mark_row) for row, mark_row in zip(board, marks)])
 
 
-def part1(boards: List[Board], drawn: List[int], occurences: Occurences) -> int:
+def occurences(boards: List[Board], number: int) -> List[Tuple[int, int, int]]:
+    # https://stackoverflow.com/a/11264799
+    val = list(chain.from_iterable([
+        chain.from_iterable([
+            [(board, row, column) for column in range(len(boards[0][0]))
+                if boards[board][row][column] == number]
+            for row in range(len(boards[0]))])
+        for board in range(len(boards))]))
+    return val
+
+
+def part1(boards: List[Board], drawn: List[int]) -> int:
     marks: List[Board] = empty_boards(
         len(boards), len(boards[0][0]), len(boards[0]))
     for number in drawn:
-        for board, row, column in occurences[number]:
+        for board, row, column in occurences(boards, number):
             marks[board][row][column] = 1
             if column_full(marks[board], column) or row_full(marks[board], row):
                 return unmarked_board_sum(boards[board], marks[board]) * number
-
     return -1
 
 
-def part2(boards: List[Board], drawn: List[int], occurences: Occurences) -> int:
+def part2(boards: List[Board], drawn: List[int]) -> int:
     marks: List[Board] = empty_boards(
         len(boards), len(boards[0][0]), len(boards[0]))
     not_won: List[int] = [i for i in range(len(boards))]
     for number in drawn:
-        for board, row, column in occurences[number]:
+        for board, row, column in occurences(boards, number):
             marks[board][row][column] = 1
             if column_full(marks[board], column) or row_full(marks[board], row):
                 if board in not_won:
@@ -102,19 +110,19 @@ def main():
         "2  0 12  3  7",
     ]
 
-    example_numbers, example_boards, example_occurences = parse(example)
-    assert(part1(example_boards, example_numbers, example_occurences) == 4512)
+    example_numbers, example_boards = parse(example)
+    assert(part1(example_boards, example_numbers) == 4512)
 
     # numbers = parse(lines)
-    numbers, boards, occurences = parse(lines)
-    answer_a = part1(boards, numbers, occurences)
+    numbers, boards = parse(lines)
+    answer_a = part1(boards, numbers)
 
     print(f"a {answer_a}")
     assert(answer_a == 82440)
     # submit(answer_a, part="a")
 
-    assert(part2(example_boards, example_numbers, example_occurences) == 1924)
-    answer_b = part2(boards, numbers, occurences)
+    assert(part2(example_boards, example_numbers) == 1924)
+    answer_b = part2(boards, numbers)
 
     print(f"b {answer_b}")
     assert(answer_b == 20774)
