@@ -6,9 +6,7 @@ import functools
 
 
 def parse(lines: List[str]) -> List[List[int]]:
-    return [
-        [int(char) for char in line]
-        for line in lines]
+    return [list(map(int, line)) for line in lines]
 
 
 def bitlist_to_int(binary: List[int]) -> int:
