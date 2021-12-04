@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List, Tuple, Dict, no_type_check
+from typing import List, Tuple, Set
 from aocd import lines
 from aocd import submit
 import functools
@@ -23,23 +23,23 @@ def parse(lines: List[str]) -> Tuple[List[int], List[Board]]:
     return (drawn, boards)
 
 
-def empty_boards(boards: int, rows: int, columns: int) -> List[Board]:
+def create_mark_boards(boards: List[Board]) -> List[Board]:
     # prevent shallow copy of rows
     # https://stackoverflow.com/a/13347704
     return [
         [
-            [0 for i in range(columns)]
-            for i in range(rows)]
-        for i in range(boards)]
+            [0 for i in range(len(boards[0]))]
+            for i in range(len(boards[0][0]))]
+        for i in range(len(boards))]
 
 
-def column_full(board: Board, column: int) -> int:
-    def summator(accumulator, row): return row[column] + accumulator
-    return functools.reduce(summator, board, 0) == len(board)
+def won(mark: Board, row: int, column: int) -> bool:
+    def column_summator(accumulator, row): return row[column] + accumulator
+    column_full = functools.reduce(column_summator, mark, 0) == len(mark)
 
+    row_full = sum(mark[row]) == len(mark[row])
 
-def row_full(board: Board, row: int) -> int:
-    return sum(board[row]) == len(board[row])
+    return column_full or row_full
 
 
 def unmarked_row_sum(row: List[int], mark_row: List[int]):
@@ -62,28 +62,27 @@ def occurences(boards: List[Board], number: int) -> List[Tuple[int, int, int]]:
 
 
 def part1(boards: List[Board], drawn: List[int]) -> int:
-    marks: List[Board] = empty_boards(
-        len(boards), len(boards[0][0]), len(boards[0]))
+    marks: List[Board] = create_mark_boards(boards)
+
     for number in drawn:
         for board, row, column in occurences(boards, number):
             marks[board][row][column] = 1
-            if column_full(marks[board], column) or row_full(marks[board], row):
+            if won(marks[board], row, column):
                 return unmarked_board_sum(boards[board], marks[board]) * number
     return -1
 
 
 def part2(boards: List[Board], drawn: List[int]) -> int:
-    marks: List[Board] = empty_boards(
-        len(boards), len(boards[0][0]), len(boards[0]))
-    not_won: List[int] = [i for i in range(len(boards))]
+    marks: List[Board] = create_mark_boards(boards)
+    not_won: Set[int] = set([i for i in range(len(boards))])
+
     for number in drawn:
         for board, row, column in occurences(boards, number):
             marks[board][row][column] = 1
-            if column_full(marks[board], column) or row_full(marks[board], row):
-                if board in not_won:
-                    not_won.remove(board)
-                    if not not_won:
-                        return unmarked_board_sum(boards[board], marks[board]) * number
+            if won(marks[board], row, column):
+                not_won.discard(board)
+                if not not_won:
+                    return unmarked_board_sum(boards[board], marks[board]) * number
     return -1
 
 
