@@ -72,6 +72,7 @@ def part1(boards: List[Board], drawn: List[int]) -> int:
     return -1
 
 
+# todo: zip board and marks to tuple, remove if won
 def part2(boards: List[Board], drawn: List[int]) -> int:
     marks: List[Board] = create_mark_boards(boards)
     not_won: Set[int] = set([i for i in range(len(boards))])
@@ -112,7 +113,6 @@ def main():
     example_numbers, example_boards = parse(example)
     assert(part1(example_boards, example_numbers) == 4512)
 
-    # numbers = parse(lines)
     numbers, boards = parse(lines)
     answer_a = part1(boards, numbers)
 
