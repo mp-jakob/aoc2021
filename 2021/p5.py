@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List, Tuple, Set
+from typing import Iterable, List, Tuple, Set
 from aocd import lines
 from aocd import submit
 import functools
@@ -40,47 +40,31 @@ def count_overlaps(map: List[List[int]]) -> int:
 
 
 def part1(lines: List[Tuple[Point, Point]], dimensions: Point) -> int:
-    map = create_map(dimensions)
-    for start, end in lines:
-        if start.x == end.x:
-            for y in range(min(start.y, end.y), max(start.y, end.y) + 1):
-                map[y][start.x] += 1
-        if start.y == end.y:
-            for x in range(min(start.x, end.x), max(start.x, end.x) + 1):
-                map[start.y][x] += 1
-    return count_overlaps(map)
+    non_diagonal = filter(
+        lambda line: line[0].x == line[1].x or line[0].y == line[1].y, lines)
+    return part2(non_diagonal, dimensions)
+
+
+def sign(num: int) -> int:
+    return num // max(abs(num), 1)
+
+
+def combine(func, iterable1, iterable2):
+    return list(map(func, iterable1, iterable2))
 
 
 def part2(lines: List[Tuple[Point, Point]], dimensions: Point) -> int:
     map = create_map(dimensions)
-    for start, end in lines:
-        diff = (abs(end.x-start.x), abs(end.y-start.y))
-        if diff[0] > diff[1]:
-            if start.x > end.x:
-                start, end = end, start
-            direction: int = 0
-            if end.y > start.y:
-                direction = 1
-            elif end.y < start.y:
-                direction = -1
-            y = start.y
-            for x in range(start.x, end.x + 1):
-                map[y][x] += 1
-                y += direction
-        else:
-            if start.y > end.y:
-                start, end = end, start
-            direction: int = 0
-            if end.x > start.x:
-                direction = 1
-            elif end.x < start.x:
-                direction = -1
-            x = start.x
-            for y in range(start.y, end.y + 1):
-                map[y][x] += 1
-                x += direction
-    # for row in map:
-    #     print(row)
+    for first, second in lines:
+        abs_diff = combine(lambda a, b: abs(b - a), first, second)
+        major_dimension: int = int(abs_diff[1] >= abs_diff[0])
+        start, end = (second, first) if first[major_dimension] > second[major_dimension] else (
+            first, second)
+        direction = combine(lambda a, b: sign(b - a), start, end)
+        current: List[int] = list(start)
+        for i in range(0, abs_diff[major_dimension] + 1):
+            map[current[1]][current[0]] += 1
+            current = combine(lambda a, b: (a + b), current, direction)
     return count_overlaps(map)
 
 
@@ -99,8 +83,6 @@ def main():
     ]
 
     example_lines, example_dimensions = parse_input(example)
-    print(example_lines)
-    print(example_dimensions)
     assert(part1(example_lines, example_dimensions) == 5)
 
     i_lines, dimensions = parse_input(lines)
