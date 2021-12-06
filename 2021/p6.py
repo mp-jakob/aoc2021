@@ -9,15 +9,13 @@ def parse(lines: List[str]) -> List[int]:
     return [int(number) for number in lines[0].split(",")]
 
 
-def part1(input: List[int], days: int = 80) -> int:
-    fishes = [0] * 9
-    count = Counter(input)
-    for i in range(9):
-        fishes[i] = count[i]
+def solution(input: List[int], days: int) -> int:
+    fishes: List[int] = [input.count(i) for i in range(9)]
     for day in range(days):
-        spawns: int = fishes[0]
-        fishes = fishes[1:] + [spawns]
-        fishes[6] += spawns
+        # cyclic left shift, append spawns of spawning fishes
+        fishes = fishes[1:] + [fishes[0]]
+        # increase lifetime 6 with number of fishes that spawned
+        fishes[6] += fishes[8]
     return sum(fishes)
 
 
@@ -25,17 +23,17 @@ def main():
     example: List[str] = ["3, 4, 3, 1, 2"]
 
     example_fishes = parse(example)
-    assert(part1(example_fishes) == 5934)
+    assert(solution(example_fishes, 80) == 5934)
 
     fishes = parse(lines)
-    answer_a = part1(fishes)
+    answer_a = solution(fishes, 80)
 
     print(f"a {answer_a}")
     assert(answer_a == 380758)
     # submit(answer_a, part="a")
 
-    assert(part1(example_fishes, 256) == 26984457539)
-    answer_b = part1(fishes, 256)
+    assert(solution(example_fishes, 256) == 26984457539)
+    answer_b = solution(fishes, 256)
 
     print(f"b {answer_b}")
     assert(answer_b == 1710623015163)
