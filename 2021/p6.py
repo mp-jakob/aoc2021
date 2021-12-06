@@ -20,7 +20,7 @@ def solution(input: List[int], days: int) -> int:
         # cyclic left shift, append spawns of spawning fishes
         fishes = fishes[1:] + [fishes[0]]
         # increase lifetime 6 with number of fishes that spawned
-        fishes = elementwise(add, fishes, [0] * 6 + [fishes[8]] + [0] * 2)
+        fishes = elementwise(add, fishes, [0, 0, 0, 0, 0, 0, fishes[8], 0, 0])
     return sum(fishes)
 
 
