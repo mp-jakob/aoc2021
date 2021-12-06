@@ -2,20 +2,25 @@
 from typing import Iterable, List, Tuple, Set
 from aocd import lines
 from aocd import submit
-from collections import Counter
+from operator import add
 
 
 def parse(lines: List[str]) -> List[int]:
     return [int(number) for number in lines[0].split(",")]
 
 
+def elementwise(func, iterable1, iterable2):
+    return list(map(func, iterable1, iterable2))
+
+
+# as functional as it can get without overflowing the stack
 def solution(input: List[int], days: int) -> int:
     fishes: List[int] = [input.count(i) for i in range(9)]
-    for day in range(days):
+    for _ in range(days):
         # cyclic left shift, append spawns of spawning fishes
         fishes = fishes[1:] + [fishes[0]]
         # increase lifetime 6 with number of fishes that spawned
-        fishes[6] += fishes[8]
+        fishes = elementwise(add, fishes, [0] * 6 + [fishes[8]] + [0] * 2)
     return sum(fishes)
 
 
