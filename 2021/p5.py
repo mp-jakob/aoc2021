@@ -65,10 +65,7 @@ def part2(lines: List[Tuple[Point, Point]], dimensions: Point) -> int:
         major_dimension: int = int(abs_diff[1] >= abs_diff[0])
         direction = elementwise(sign, diff)
         current: List[int] = list(start)
-        for i in range(
-                start[major_dimension],
-                end[major_dimension] + direction[major_dimension],
-                direction[major_dimension]):
+        for i in range(abs_diff[major_dimension] + 1):
             map[current[1]][current[0]] += 1
             current = combine(add, current, direction)
     return count_overlaps(map)
