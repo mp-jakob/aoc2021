@@ -5,7 +5,7 @@ from aocd import submit
 import functools
 from parse import parse
 from collections import namedtuple
-
+from operator import sub, add, abs
 Point = namedtuple('Point', ['x', 'y'])
 
 
@@ -49,22 +49,28 @@ def sign(num: int) -> int:
     return num // max(abs(num), 1)
 
 
+def elementwise(func, iterable):
+    return list(map(func, iterable))
+
+
 def combine(func, iterable1, iterable2):
     return list(map(func, iterable1, iterable2))
 
 
 def part2(lines: List[Tuple[Point, Point]], dimensions: Point) -> int:
     map = create_map(dimensions)
-    for first, second in lines:
-        abs_diff = combine(lambda a, b: abs(b - a), first, second)
+    for start, end in lines:
+        diff = combine(sub, end, start)
+        abs_diff = elementwise(abs, diff)
         major_dimension: int = int(abs_diff[1] >= abs_diff[0])
-        start, end = (second, first) if first[major_dimension] > second[major_dimension] else (
-            first, second)
-        direction = combine(lambda a, b: sign(b - a), start, end)
+        direction = elementwise(sign, diff)
         current: List[int] = list(start)
-        for i in range(0, abs_diff[major_dimension] + 1):
+        for i in range(
+                start[major_dimension],
+                end[major_dimension] + direction[major_dimension],
+                direction[major_dimension]):
             map[current[1]][current[0]] += 1
-            current = combine(lambda a, b: (a + b), current, direction)
+            current = combine(add, current, direction)
     return count_overlaps(map)
 
 
