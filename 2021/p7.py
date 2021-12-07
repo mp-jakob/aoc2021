@@ -14,7 +14,8 @@ def dist(a: int, b: int) -> int:
 
 def part1(crabs: List[int]) -> int:
     costs: List[int] = [
-        sum([dist(crab, position) for crab in crabs])
+        functools.reduce(lambda sum, crab: sum +
+                         dist(crab, position), crabs, 0)
         for position in range(max(crabs) + 1)]
     return min(costs)
 
@@ -25,7 +26,8 @@ def gaussian_sum(n: int):
 
 def part2(crabs: List[int]) -> int:
     costs: List[int] = [
-        sum([gaussian_sum(dist(crab, position)) for crab in crabs])
+        functools.reduce(lambda sum, crab: sum +
+                         gaussian_sum(dist(crab, position)), crabs, 0)
         for position in range(max(crabs) + 1)]
     return min(costs)
 
