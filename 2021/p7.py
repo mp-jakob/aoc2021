@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-from typing import Iterable, List, Tuple, Set
-from aocd import lines
-from aocd import submit
-from operator import add
+from typing import List
+from aocd import lines, submit
 import functools
 
 
@@ -10,24 +8,25 @@ def parse(lines: List[str]) -> List[int]:
     return [int(number) for number in lines[0].split(",")]
 
 
-def elementwise(func, iterable):
-    return list(map(func, iterable))
-
-
 def dist(a: int, b: int) -> int:
     return abs(a - b)
 
 
 def part1(crabs: List[int]) -> int:
-    costs: List[int] = [sum(elementwise(
-        lambda x: dist(x, position), crabs)) for position in range(max(crabs) + 1)]
+    costs: List[int] = [
+        sum([dist(crab, position) for crab in crabs])
+        for position in range(max(crabs) + 1)]
     return min(costs)
 
 
+def gaussian_sum(n: int):
+    return ((n + 1) * n // 2)
+
+
 def part2(crabs: List[int]) -> int:
-    def arith_sum(x, y): return ((dist(x, y) + 1) * dist(x, y) // 2)
-    costs: List[int] = [sum(elementwise(
-        lambda x: arith_sum(x, position), crabs)) for position in range(max(crabs) + 1)]
+    costs: List[int] = [
+        sum([gaussian_sum(dist(crab, position)) for crab in crabs])
+        for position in range(max(crabs) + 1)]
     return min(costs)
 
 
