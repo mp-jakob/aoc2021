@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-from typing import List, Tuple, Set
+from typing import List, Tuple
 from aocd import lines, submit
 import itertools
 from copy import deepcopy
-
+from operator import countOf
 Map = List[List[int]]
 
 
@@ -19,35 +19,33 @@ offsets: List[Tuple[int, int]] = [
 ]
 
 
-def iteration(map: map) -> int:
-    flashes: int = 0
-    coordinates = itertools.product(
-        range(len(map)), range(len(map[0])))
-    for coord in coordinates:
+def coordinate_range(map: Map):
+    return itertools.product(range(len(map)), range(len(map[0])))
+
+
+def iteration(map: Map) -> int:
+    # map = [[x + 1 for x in row] for row in map]
+    for coord in coordinate_range(map):
         map[coord[0]][coord[1]] += 1
 
-    worklist = list(itertools.product(range(len(map)), range(len(map[0]))))
-    flashed: Set[Tuple[int, int]] = set()
+    worklist = list(coordinate_range(map))
     while len(worklist):
         coord, *worklist = worklist
-        if coord in flashed:
+        if map[coord[0]][coord[1]] == 0:
             continue
-        if map[coord[0]][coord[1]] > 9:
-            flashed.add(coord)
-            for offset in offsets:
-                neighbour = (coord[0] + offset[0], coord[1] + offset[1])
-                if neighbour[0] < 0 or neighbour[0] >= len(map) or neighbour[1] < 0 or neighbour[1] >= len(map[0]):
-                    continue
-                map[neighbour[0]][neighbour[1]] += 1
-                if neighbour not in flashed:
-                    worklist.append(neighbour)
-
-    coordinates = itertools.product(
-        range(len(map)), range(len(map[0])))
-    for coord in coordinates:
-        if map[coord[0]][coord[1]] > 9:
-            flashes += 1
+        elif map[coord[0]][coord[1]] > 9:
             map[coord[0]][coord[1]] = 0
+            neighbours = [(coord[0] + offset[0], coord[1] + offset[1])
+                          for offset in offsets]
+            neighbours = filter(lambda point: 0 <= point[0] < len(
+                map) and 0 <= point[1] < len(map[0]), neighbours)
+            not_flashed = filter(
+                lambda point: map[point[0]][point[1]] > 0, neighbours)
+            for neighbour in not_flashed:
+                map[neighbour[0]][neighbour[1]] += 1
+                worklist.append(neighbour)
+
+    flashes = countOf(itertools.chain(*map), 0)
     return flashes
 
 
