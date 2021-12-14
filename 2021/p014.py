@@ -5,6 +5,7 @@ from copy import deepcopy
 from functools import reduce
 
 Insertions = Dict[str, str]
+Histogram = Dict[str, int]
 
 
 def parse(lines: List[str]) -> Tuple[str, Insertions]:
@@ -12,32 +13,46 @@ def parse(lines: List[str]) -> Tuple[str, Insertions]:
     return (lines[0].strip(), insertions)
 
 
-def expand(template: str, insertions: Insertions) -> str:
-    expanded = ""
-    for i in range(len(template) - 1):
-        head, next, *tail = template
-        expanded += template[i] + insertions[template[i:i+2]]
-    expanded += template[len(template) - 1]
-    return expanded
+def expand(histogram: Histogram, insertions: Insertions, frequencies: Histogram) -> Tuple[Histogram, Histogram]:
+    expanded = deepcopy(histogram)
+    for pair, occurences in histogram.items():
+        inserter = insertions[pair]
+        if pair[0] + inserter not in expanded:
+            expanded[pair[0] + inserter] = 0
+        expanded[pair[0] + inserter] += occurences
+        if inserter + pair[1] not in expanded:
+            expanded[inserter + pair[1]] = 0
+        expanded[inserter + pair[1]] += occurences
+        expanded[pair] -= occurences
+        if not inserter in frequencies:
+            frequencies[inserter] = 0
+        frequencies[inserter] += occurences
+    return (expanded, frequencies)
 
 
-def part1(template: str, insertions: Insertions, iterations: int) -> int:
-    for i in range(iterations):
-        print(i)
-        template = expand(template, insertions)
+def solution(template: str, insertions: Insertions, iterations: int) -> int:
 
-    def letter_counter(table, curr):
-        if curr not in table:
-            table[curr] = 1
-        else:
-            table[curr] += 1
+    def letter_counter(table, char):
+        if char not in table:
+            table[char] = 0
+        table[char] += 1
         return table
 
     frequencies = reduce(letter_counter, template, {})
-    print(frequencies)
+
+    histogram: Histogram = {}
+    for i in range(len(template) - 1):
+        pair = template[i:i+2]
+        if not pair in histogram:
+            histogram[pair] = 1
+        else:
+            histogram[pair] += 1
+
+    for i in range(iterations):
+        histogram, frequencies = expand(histogram, insertions, frequencies)
+
     most_common = max(frequencies.values())
     least_common = min(frequencies.values())
-    print(f"{least_common} and  {most_common}")
     return most_common - least_common
 
 
@@ -64,24 +79,19 @@ def main():
     ]
 
     example_template, example_insertions = parse(example)
-    print(example_template)
-    print(example_insertions)
-    assert(part1(example_template, example_insertions, 10) == 1588)
+    assert(solution(example_template, example_insertions, 10) == 1588)
 
     template, inserrions = parse(lines)
-    answer_a = part1(template, inserrions, 10)
+    answer_a = solution(template, inserrions, 10)
     print(f"a {answer_a}")
     assert(answer_a == 2797)
     # submit(answer_a, part="a")
 
-    assert(part1(example_template, example_insertions, 40) == 2188189693529)
-    # # part2(example_template, example_insertions)
-    # print(f"b")
-    answer_b = part1(template, inserrions, 40)
+    assert(solution(example_template, example_insertions, 40) == 2188189693529)
+    answer_b = solution(template, inserrions, 40)
     print(f"b {answer_b}")
-    # [print(row) for row in answer_b]
 
-    # assert(answer_b == solution)
+    assert(answer_b == 2926813379532)
     # submit(answer_b, part="b")
 
 
