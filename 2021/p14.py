@@ -3,6 +3,7 @@ from typing import List, Tuple, Dict
 from aocd import lines, submit
 from copy import deepcopy
 from functools import reduce
+from collections import defaultdict
 
 Insertions = Dict[str, str]
 Histogram = Dict[str, int]
@@ -14,39 +15,44 @@ def parse(lines: List[str]) -> Tuple[str, Insertions]:
 
 
 def expand(histogram: Histogram, insertions: Insertions, frequencies: Histogram) -> Tuple[Histogram, Histogram]:
-    expanded = deepcopy(histogram)
-    for pair, occurences in histogram.items():
+    def histogram_reducer(frequencies, item):
+        pair, occurences = item
         inserter = insertions[pair]
-        if pair[0] + inserter not in expanded:
-            expanded[pair[0] + inserter] = 0
-        expanded[pair[0] + inserter] += occurences
-        if inserter + pair[1] not in expanded:
-            expanded[inserter + pair[1]] = 0
-        expanded[inserter + pair[1]] += occurences
-        expanded[pair] -= occurences
-        if not inserter in frequencies:
-            frequencies[inserter] = 0
+        frequencies[pair[0] + inserter] += occurences
+        frequencies[inserter + pair[1]] += occurences
+        frequencies[pair] -= occurences
+        return frequencies
+
+    expanded = reduce(histogram_reducer, histogram.items(),
+                      deepcopy(histogram))
+
+    def frequency_reducer(frequencies, item):
+        pair, occurences = item
+        inserter = insertions[pair]
         frequencies[inserter] += occurences
+        return frequencies
+
+    frequencies = reduce(frequency_reducer, histogram.items(), frequencies)
     return (expanded, frequencies)
 
 
 def solution(template: str, insertions: Insertions, iterations: int) -> int:
 
     def letter_counter(table, char):
-        if char not in table:
-            table[char] = 0
         table[char] += 1
         return table
 
-    frequencies = reduce(letter_counter, template, {})
+    # https: // docs.python.org/3.8/library/collections.html
+    frequencies: Histogram = reduce(
+        letter_counter, template, defaultdict(lambda: 0))
 
-    histogram: Histogram = {}
-    for i in range(len(template) - 1):
+    def pair_counter(histogram, i):
         pair = template[i:i+2]
-        if not pair in histogram:
-            histogram[pair] = 1
-        else:
-            histogram[pair] += 1
+        histogram[pair] += 1
+        return histogram
+
+    histogram: Histogram = reduce(pair_counter, range(
+        len(template) - 1), defaultdict(lambda: 0))
 
     for i in range(iterations):
         histogram, frequencies = expand(histogram, insertions, frequencies)
