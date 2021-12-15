@@ -2,7 +2,7 @@
 from typing import List, Tuple, Dict, Set
 from aocd import lines, submit
 # from copy import deepcopy
-# from functools import reduce
+from functools import reduce
 from itertools import accumulate, chain
 from operator import add
 from collections import defaultdict
@@ -31,51 +31,12 @@ def combine_tuples(func, iterable1, iterable2):
 neighbour_offsets: List[Point] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 
-# def dijkstra(map: Map) -> List[int]:
-#     predecessors: List[int] = [-1] * (len(map) * len(map[0]))
-#     distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
-#     change = True
-#     while change:
-#         change = False
-#         for y in range(len(map)):
-#             for x in range(len(map[0])):
-#                 closest = index((y, x), map)
-#                 for neighbour_offset in neighbour_offsets:
-#                     neighbour = combine_tuples(
-#                         add, (y, x), neighbour_offset)
-#                     if neighbour[0] < 0 or neighbour[0] == len(map) \
-#                             or neighbour[1] < 0 or neighbour[1] == len(map[0]):
-#                         continue
-#                     neighbour_index = index(neighbour, map)
-#                     new_distance = distances[closest] + \
-#                         map[neighbour[0]][neighbour[1]]
-#                     if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
-#                         distances[neighbour_index] = new_distance
-#                         predecessors[neighbour_index] = closest
-#                         change = True
-#                     assert(distances[neighbour_index] >= 0)
-#     # for y in range(len(map)):
-#     #     for x in range(len(map[0])):
-#     #         print(f" {distances[index((y,x), map)]} ", end="")
-#     #     print("")
-#     return predecessors
-
-
-def dijkstra(map: Map) -> List[int]:
+def dijkstra(map: Map) -> Tuple[List[int], List[int]]:
     predecessors: List[int] = [-1] * (len(map) * len(map[0]))
     distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
-    unvisited: Set[int] = set(range(len(map) * len(map[0])))
-    i = 0
-    queue = PriorityQueue()
+    queue: PriorityQueue = PriorityQueue()
     queue.put((0, 0))
-    # while unvisited:
     while not queue.empty():
-        i += 1
-        # print(f"iter {i}")
-        # def min_dist(
-        #     x, y): return x if (distances[x] < distances[y] and distances[x] >= 0) or distances[y] < 0 else y
-        # closest = next(accumulate(unvisited, min_dist))
-        # unvisited.remove(closest)
         _, closest = queue.get()
         for neighbour_offset in neighbour_offsets:
             neighbour = combine_tuples(
@@ -84,7 +45,6 @@ def dijkstra(map: Map) -> List[int]:
                     or neighbour[1] < 0 or neighbour[1] == len(map[0]):
                 continue
             neighbour_index = index(neighbour, map)
-            # print(neighbour)
             new_distance = distances[closest] + \
                 map[neighbour[0]][neighbour[1]]
             if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
@@ -92,34 +52,12 @@ def dijkstra(map: Map) -> List[int]:
                 predecessors[neighbour_index] = closest
                 queue.put((distances[neighbour_index], neighbour_index))
             assert(distances[neighbour_index] >= 0)
-    assert(i == len(predecessors))
-    return predecessors
+    return (predecessors, distances)
 
 
 def part1(map: Map) -> int:
-    predecessors = dijkstra(map)
-    curr = len(map) * len(map[0]) - 1
-    cost = 0
-    path = []
-    while curr != 0:
-        assert(curr > 0)
-        curr_point = point(curr, map)
-        path += [curr_point]
-        # print(f"{curr_point}, cost {map[curr_point[0]][curr_point[1]]}")
-        cost += map[curr_point[0]][curr_point[1]]
-        curr = predecessors[curr]
-    # for y in range(len(map)):
-    #     for x in range(len(map[0])):
-    #         if (y, x) in path:
-    #             print(f"[{map[y][x]}]", end="")
-    #         else:
-    #             print(f" {map[y][x]} ", end="")
-    #     print("")
-
-    # [print(row) for row in map]
-
-    # print(cost)
-    return cost
+    _, distances = dijkstra(map)
+    return distances[-1]
 
 
 def elementwise(func, iterable):
