@@ -31,64 +31,64 @@ def combine_tuples(func, iterable1, iterable2):
 neighbour_offsets: List[Point] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 
-def dijkstra(map: Map) -> List[int]:
-    predecessors: List[int] = defaultdict(lambda: -1)
-    distances: List[int] = defaultdict(lambda: -1)
-    distances[0] = 0
-    change = True
-    while change:
-        change = False
-        for y in range(len(map)):
-            for x in range(len(map[0])):
-                closest = index((y, x), map)
-                for neighbour_offset in neighbour_offsets:
-                    neighbour = combine_tuples(
-                        add, (y, x), neighbour_offset)
-                    if neighbour[0] < 0 or neighbour[0] == len(map) \
-                            or neighbour[1] < 0 or neighbour[1] == len(map[0]):
-                        continue
-                    neighbour_index = index(neighbour, map)
-                    new_distance = distances[closest] + \
-                        map[neighbour[0]][neighbour[1]]
-                    if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
-                        distances[neighbour_index] = new_distance
-                        predecessors[neighbour_index] = closest
-                        change = True
-                    assert(distances[neighbour_index] >= 0)
-    # for y in range(len(map)):
-    #     for x in range(len(map[0])):
-    #         print(f" {distances[index((y,x), map)]} ", end="")
-    #     print("")
-    return predecessors
-
 # def dijkstra(map: Map) -> List[int]:
 #     predecessors: List[int] = [-1] * (len(map) * len(map[0]))
 #     distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
-#     unvisited: Set[int] = set(range(len(map) * len(map[0])))
-#     i = 0
-#     while unvisited:
-#         i += 1
-#         def min_dist(
-#             x, y): return x if distances[x] < distances[y] or distances[y] < 0 else y
-#         closest = next(accumulate(unvisited, min_dist))
-#         assert(distances[closest] >= 0)
-#         unvisited.remove(closest)
-#         for neighbour_offset in neighbour_offsets:
-#             neighbour = combine_tuples(
-#                 add, point(closest, map), neighbour_offset)
-#             if neighbour[0] < 0 or neighbour[0] == len(map) \
-#                     or neighbour[1] < 0 or neighbour[1] == len(map[0]):
-#                 continue
-#             neighbour_index = index(neighbour, map)
-#             # print(neighbour)
-#             new_distance = distances[closest] + \
-#                 map[neighbour[0]][neighbour[1]]
-#             if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
-#                 distances[neighbour_index] = new_distance
-#                 predecessors[neighbour_index] = closest
-#             assert(distances[neighbour_index] >= 0)
-#     assert(i == len(predecessors))
+#     change = True
+#     while change:
+#         change = False
+#         for y in range(len(map)):
+#             for x in range(len(map[0])):
+#                 closest = index((y, x), map)
+#                 for neighbour_offset in neighbour_offsets:
+#                     neighbour = combine_tuples(
+#                         add, (y, x), neighbour_offset)
+#                     if neighbour[0] < 0 or neighbour[0] == len(map) \
+#                             or neighbour[1] < 0 or neighbour[1] == len(map[0]):
+#                         continue
+#                     neighbour_index = index(neighbour, map)
+#                     new_distance = distances[closest] + \
+#                         map[neighbour[0]][neighbour[1]]
+#                     if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
+#                         distances[neighbour_index] = new_distance
+#                         predecessors[neighbour_index] = closest
+#                         change = True
+#                     assert(distances[neighbour_index] >= 0)
+#     # for y in range(len(map)):
+#     #     for x in range(len(map[0])):
+#     #         print(f" {distances[index((y,x), map)]} ", end="")
+#     #     print("")
 #     return predecessors
+
+
+def dijkstra(map: Map) -> List[int]:
+    predecessors: List[int] = [-1] * (len(map) * len(map[0]))
+    distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
+    unvisited: Set[int] = set(range(len(map) * len(map[0])))
+    i = 0
+    while unvisited:
+        i += 1
+        # print(f"iter {i}")
+        def min_dist(
+            x, y): return x if (distances[x] < distances[y] and distances[x] >= 0) or distances[y] < 0 else y
+        closest = next(accumulate(unvisited, min_dist))
+        unvisited.remove(closest)
+        for neighbour_offset in neighbour_offsets:
+            neighbour = combine_tuples(
+                add, point(closest, map), neighbour_offset)
+            if neighbour[0] < 0 or neighbour[0] == len(map) \
+                    or neighbour[1] < 0 or neighbour[1] == len(map[0]):
+                continue
+            neighbour_index = index(neighbour, map)
+            # print(neighbour)
+            new_distance = distances[closest] + \
+                map[neighbour[0]][neighbour[1]]
+            if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
+                distances[neighbour_index] = new_distance
+                predecessors[neighbour_index] = closest
+            assert(distances[neighbour_index] >= 0)
+    assert(i == len(predecessors))
+    return predecessors
 
 
 def part1(map: Map) -> int:
@@ -132,7 +132,7 @@ def part2(map: Map) -> int:
     map = [expand(row) for row in map]
     map = list(chain(map, *[[elementwise(lambda x: increase_risk(
         x, i), row) for row in map] for i in range(1, 5)]))
-    [print(row) for row in map]
+    # [print(row) for row in map]
     return part1(map)
 
 
@@ -163,8 +163,8 @@ def main():
     answer_b = part2(map)
     print(f"b {answer_b}")
 
-    assert(answer_b < 2932)
-    submit(answer_b, part="b")
+    assert(answer_b == 2925)
+    # submit(answer_b, part="b")
 
 
 if __name__ == "__main__":
