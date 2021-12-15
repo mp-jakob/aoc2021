@@ -30,7 +30,7 @@ def combine_tuples(func, iterable1, iterable2):
 neighbour_offsets: List[Point] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 
-def part1(map: Map) -> int:
+def dijkstra(map: Map) -> List[int]:
     predecessors: List[int] = [-1] * (len(map) * len(map[0]))
     distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
     unvisited: Set[int] = set(range(len(predecessors)))
@@ -45,22 +45,50 @@ def part1(map: Map) -> int:
                     or neighbour[1] < 0 or neighbour[1] >= len(map[0]):
                 continue
             neighbour_index = index(neighbour, map)
-            print(neighbour)
+            # print(neighbour)
             new_distance = distances[closest] + \
                 map[neighbour[0]][neighbour[1]]
             if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
                 distances[neighbour_index] = new_distance
                 predecessors[neighbour_index] = closest
+    return predecessors
 
-    curr = len(distances) - 1
+
+def part1(map: Map) -> int:
+    predecessors = dijkstra(map)
+    curr = len(map) * len(map[0]) - 1
     cost = 0
     while curr != 0:
         curr_point = point(curr, map)
         # print(curr_point)
         cost += map[curr_point[0]][curr_point[1]]
         curr = predecessors[curr]
-
+    print(cost)
     return cost
+
+
+def elementwise(func, iterable):
+    return list(map(func, iterable))
+
+
+def increase_risk(val: int, amount: int) -> int:
+    return (val + amount) % 10 + ((val + amount) // 10)
+
+
+def part2(map: Map) -> int:
+    def bla(row):
+        return row \
+            + elementwise(lambda x: increase_risk(x, 1), row) \
+            + elementwise(lambda x: increase_risk(x, 2), row) \
+            + elementwise(lambda x: increase_risk(x, 3), row) \
+            + elementwise(lambda x: increase_risk(x, 4), row)
+    map = [bla(row) for row in map]
+    map += [elementwise(lambda x: increase_risk(x, 1), row) for row in map] \
+        + [elementwise(lambda x: increase_risk(x, 2), row) for row in map] \
+        + [elementwise(lambda x: increase_risk(x, 3), row) for row in map] \
+        + [elementwise(lambda x: increase_risk(x, 4), row) for row in map]
+    [print(row) for row in map]
+    return part1(map)
 
 
 def main():
@@ -75,7 +103,6 @@ def main():
         "3125421639",
         "1293138521",
         "2311944581",
-
     ]
 
     example_map = parse(example)
@@ -85,13 +112,13 @@ def main():
     answer_a = part1(map)
     print(f"a {answer_a}")
     assert(answer_a == 609)
-    submit(answer_a, part="a")
+    # submit(answer_a, part="a")
 
-    # assert(part1(example_map, example_insertions, 40) == 2188189693529)
-    # answer_b = part1(template, inserrions, 40)
+    assert(part2(example_map) == 315)
+    # answer_b = part2(map)
     # print(f"b {answer_b}")
 
-    # assert(answer_b == 2926813379532)
+    # assert(answer_b < 2932)
     # submit(answer_b, part="b")
 
 
