@@ -35,14 +35,14 @@ def dijkstra(map: Map) -> List[int]:
     distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
     unvisited: Set[int] = set(range(len(predecessors)))
     while unvisited:
-        def min_dist(x, y): return x if distances[x] < distances[y] else y
+        def min_dist(x, y): return x if distances[x] <= distances[y] else y
         closest = next(accumulate(unvisited, min_dist))
         unvisited.remove(closest)
         for neighbour_offset in neighbour_offsets:
             neighbour = combine_tuples(
                 add, point(closest, map), neighbour_offset)
-            if neighbour[0] < 0 or neighbour[0] >= len(map) \
-                    or neighbour[1] < 0 or neighbour[1] >= len(map[0]):
+            if neighbour[0] < 0 or neighbour[0] == len(map) \
+                    or neighbour[1] < 0 or neighbour[1] == len(map[0]):
                 continue
             neighbour_index = index(neighbour, map)
             # print(neighbour)
@@ -58,11 +58,22 @@ def part1(map: Map) -> int:
     predecessors = dijkstra(map)
     curr = len(map) * len(map[0]) - 1
     cost = 0
+    path = []
     while curr != 0:
         curr_point = point(curr, map)
-        # print(curr_point)
+        path += [curr_point]
+        # print(f"{curr_point}, cost {map[curr_point[0]][curr_point[1]]}")
         cost += map[curr_point[0]][curr_point[1]]
         curr = predecessors[curr]
+    for y in range(len(map)):
+        for x in range(len(map[0])):
+            if (y, x) in path:
+                print(f"[{map[y][x]}]", end="")
+            else:
+                print(f" {map[y][x]} ", end="")
+        print("")
+    # [print(row) for row in map]
+
     print(cost)
     return cost
 
@@ -87,7 +98,6 @@ def part2(map: Map) -> int:
         + [elementwise(lambda x: increase_risk(x, 2), row) for row in map] \
         + [elementwise(lambda x: increase_risk(x, 3), row) for row in map] \
         + [elementwise(lambda x: increase_risk(x, 4), row) for row in map]
-    [print(row) for row in map]
     return part1(map)
 
 
