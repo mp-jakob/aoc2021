@@ -6,7 +6,7 @@ from aocd import lines, submit
 from itertools import accumulate, chain
 from operator import add
 from collections import defaultdict
-
+from queue import PriorityQueue
 
 Map = List[List[int]]
 Point = Tuple[int, int],
@@ -66,13 +66,17 @@ def dijkstra(map: Map) -> List[int]:
     distances: List[int] = [0] + [-1] * (len(map) * len(map[0]) - 1)
     unvisited: Set[int] = set(range(len(map) * len(map[0])))
     i = 0
-    while unvisited:
+    queue = PriorityQueue()
+    queue.put((0, 0))
+    # while unvisited:
+    while not queue.empty():
         i += 1
         # print(f"iter {i}")
-        def min_dist(
-            x, y): return x if (distances[x] < distances[y] and distances[x] >= 0) or distances[y] < 0 else y
-        closest = next(accumulate(unvisited, min_dist))
-        unvisited.remove(closest)
+        # def min_dist(
+        #     x, y): return x if (distances[x] < distances[y] and distances[x] >= 0) or distances[y] < 0 else y
+        # closest = next(accumulate(unvisited, min_dist))
+        # unvisited.remove(closest)
+        _, closest = queue.get()
         for neighbour_offset in neighbour_offsets:
             neighbour = combine_tuples(
                 add, point(closest, map), neighbour_offset)
@@ -86,6 +90,7 @@ def dijkstra(map: Map) -> List[int]:
             if distances[neighbour_index] < 0 or distances[neighbour_index] > new_distance:
                 distances[neighbour_index] = new_distance
                 predecessors[neighbour_index] = closest
+                queue.put((distances[neighbour_index], neighbour_index))
             assert(distances[neighbour_index] >= 0)
     assert(i == len(predecessors))
     return predecessors
